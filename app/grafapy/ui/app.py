@@ -19,7 +19,6 @@ _TAB_PREFIX = "tab-"
 
 class GrafaPyApp(App):
     TITLE = "GrafaPy"
-    SUB_TITLE = "Grafana in your terminal"
 
     CSS = """
     TabbedContent {
@@ -55,7 +54,7 @@ class GrafaPyApp(App):
         self._carousel = Carousel(self.settings.carousel_interval)
 
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield Header(show_clock=True)
         yield TabbedContent(id="tabs")
         yield Footer()
 
@@ -83,15 +82,13 @@ class GrafaPyApp(App):
 
         self.set_interval(self.settings.refresh_interval, self._refresh_timer_tick)
         self.set_interval(self._carousel.interval, self._carousel_tick)
-        self._update_subtitle()
         await self._ensure_dashboard_loaded(summaries[0].uid)
 
     async def on_tabbed_content_tab_activated(self, event: TabbedContent.TabActivated) -> None:
         pane_id = event.pane.id
         if not pane_id or not pane_id.startswith(_TAB_PREFIX):
             return
-        if self._carousel.note_activation(pane_id):
-            self._update_subtitle()
+        self._carousel.note_activation(pane_id)
         uid = pane_id.removeprefix(_TAB_PREFIX)
         await self._ensure_dashboard_loaded(uid)
 
@@ -102,12 +99,8 @@ class GrafaPyApp(App):
         if next_id:
             tabs.active = next_id
 
-    def _update_subtitle(self) -> None:
-        self.sub_title = f"Grafana in your terminal · {self._carousel.status_text} (press c)"
-
     async def action_toggle_carousel(self) -> None:
         self._carousel.toggle()
-        self._update_subtitle()
         self.notify(f"Carousel {'resumed' if self._carousel.enabled else 'paused'}", timeout=2)
 
     async def _ensure_dashboard_loaded(self, uid: str) -> None:
