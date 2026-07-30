@@ -36,7 +36,7 @@ def resolve_range(time_from: str | None, time_to: str | None) -> tuple[float, fl
     return start, end
 
 
-def step_for(start: float, end: float, *, target_points: int = 120) -> float:
+def step_for(start: float, end: float, *, target_points: int = 60) -> float:
     span = max(end - start, 1.0)
     step = span / target_points
     return max(step, 1.0)

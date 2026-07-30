@@ -64,6 +64,26 @@ python -m grafapy
 - `r` forces an immediate refresh of the current tab, `c` toggles the
   carousel, `q` quits.
 
+## Running on constrained hardware (Raspberry Pi, etc.)
+
+GrafaPy's dependencies are all pure Python - no numpy/pandas/compiled
+extensions - so there's nothing to cross-compile and the install footprint
+is small (~30MB). The periodic work (querying Grafana, redrawing charts)
+is what actually costs CPU on weak hardware, and it's tunable entirely
+through `.env`:
+
+```
+GRAFAPY_REFRESH_INTERVAL=30      # default 15 (seconds between data refreshes)
+GRAFAPY_CAROUSEL_INTERVAL=15     # default 6 (seconds between tab switches)
+TEXTUAL_FPS=10                   # default 60 (Textual's own render cap)
+TEXTUAL_ANIMATIONS=none          # default full (disables tab-switch transitions)
+TEXTUAL_SMOOTH_SCROLL=0          # default 1
+```
+
+The `TEXTUAL_*` variables aren't GrafaPy's own - they're read directly by
+Textual - but `.env` is loaded early enough (see `grafapy/__init__.py`) to
+set them before Textual picks up its defaults.
+
 ## Notes / limitations
 
 - Only Prometheus datasources are queried today (the panels seen in this repo's

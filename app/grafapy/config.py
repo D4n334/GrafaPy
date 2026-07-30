@@ -2,18 +2,6 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
-
-from dotenv import load_dotenv
-
-_here = Path(__file__).resolve()
-for parent in (_here.parent, *_here.parents):
-    candidate = parent / ".env"
-    if candidate.exists():
-        load_dotenv(candidate)
-        break
-else:
-    load_dotenv()
 
 
 @dataclass(frozen=True)
@@ -22,6 +10,7 @@ class Settings:
     grafana_token: str
     refresh_interval: float = 15.0
     request_timeout: float = 10.0
+    carousel_interval: float = 6.0
 
 
 def load_settings() -> Settings:
@@ -36,10 +25,12 @@ def load_settings() -> Settings:
 
     refresh = float(os.environ.get("GRAFAPY_REFRESH_INTERVAL", "15"))
     timeout = float(os.environ.get("GRAFAPY_REQUEST_TIMEOUT", "10"))
+    carousel = float(os.environ.get("GRAFAPY_CAROUSEL_INTERVAL", "6"))
 
     return Settings(
         grafana_url=url,
         grafana_token=token,
         refresh_interval=refresh,
         request_timeout=timeout,
+        carousel_interval=carousel,
     )

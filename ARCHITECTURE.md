@@ -20,9 +20,11 @@ Read this before making structural changes.
 
 ## Module map
 
-- **`config.py`** - loads `GRAFANA_URL` / `GRAFANA_TOKEN` from a `.env`
-  file, searching upward from the current file's directory so the app
-  works whether it's launched from the repo root or from `app/`.
+- **`config.py`** - reads settings (`GRAFANA_URL`, `GRAFANA_TOKEN`,
+  `GRAFAPY_REFRESH_INTERVAL`, `GRAFAPY_CAROUSEL_INTERVAL`,
+  `GRAFAPY_REQUEST_TIMEOUT`) from the process environment. The `.env` file
+  itself is loaded in `__init__.py`, not here - see "`.env` loads before
+  Textual" below for why.
 
 - **`grafana/`** - everything about talking to the Grafana HTTP API.
   - `client.py` - the async `GrafanaClient`: dashboard discovery, dashboard
@@ -126,6 +128,28 @@ per-series `color` list didn't map colours to bars reliably - colours got
 scrambled across bars in testing - which is unacceptable for data people
 are using to monitor for problems. The hand-rolled version guarantees
 each bar's colour matches its own threshold-derived value.
+
+**`.env` loads before Textual.** `grafapy/__init__.py` finds and loads the
+`.env` file - a job that used to live in `config.py`. It has to happen in
+`__init__.py` instead: Textual reads its own tuning env vars (`TEXTUAL_FPS`,
+`TEXTUAL_ANIMATIONS`, ...) as soon as `textual.constants` is first
+imported, which happens the moment anything imports `textual.app` - and
+`ui/app.py` does that at module scope, before `config.py` would otherwise
+run `load_dotenv()`. Since every import path into this package (the
+`grafapy` console script, `python -m grafapy`, or a plain `import grafapy`)
+runs `grafapy/__init__.py` first, putting the `.env` load there guarantees
+it happens before any submodule - including `ui/app.py` - gets a chance to
+import Textual. This is what lets `.env` set `TEXTUAL_FPS=10` etc. and
+have it actually take effect (see the README's "Running on constrained
+hardware" section).
+
+**Range queries default to 60 points, not 120.** `panels/timeutil.py`'s
+`step_for` picks a step size that yields roughly `target_points` samples
+per series. It was originally 120; halved to 60 since a terminal chart or
+sparkline is rarely wider than a few dozen columns anyway, so the extra
+resolution was wasted JSON parsing and plotting work on every refresh -
+work that matters more on something like a Raspberry Pi 2 than on a
+desktop.
 
 ## Adding a new panel type
 

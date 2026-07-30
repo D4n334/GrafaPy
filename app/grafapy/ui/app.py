@@ -47,14 +47,12 @@ class GrafaPyApp(App):
         ("q", "quit", "Quit"),
     ]
 
-    CAROUSEL_INTERVAL = 6.0
-
     def __init__(self) -> None:
         super().__init__()
         self.settings = load_settings()
         self.client = GrafanaClient(self.settings)
         self._dashboards: dict[str, DashboardState] = {}
-        self._carousel = Carousel(self.CAROUSEL_INTERVAL)
+        self._carousel = Carousel(self.settings.carousel_interval)
 
     def compose(self) -> ComposeResult:
         yield Header()
