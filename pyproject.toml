@@ -1,0 +1,24 @@
+[project]
+name = "grafapy"
+version = "0.1.0"
+description = "A lightweight Grafana dashboard viewer for the terminal"
+requires-python = ">=3.10"
+dependencies = [
+    "textual>=8.0",
+    "textual-plotext>=1.0",
+    "httpx>=0.28",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+grafapy = "grafapy.ui.app:run"
+
+[tool.setuptools]
+package-dir = { "" = "app" }
+
+[tool.setuptools.packages.find]
+where = ["app"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,4 @@
+textual>=8.0
+textual-plotext>=1.0
+httpx>=0.28
+python-dotenv>=1.0

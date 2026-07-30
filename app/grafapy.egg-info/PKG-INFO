@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: grafapy
+Version: 0.1.0
+Summary: A lightweight Grafana dashboard viewer for the terminal
+Requires-Python: >=3.10
+License-File: LICENSE
+Requires-Dist: textual>=8.0
+Requires-Dist: textual-plotext>=1.0
+Requires-Dist: httpx>=0.28
+Requires-Dist: python-dotenv>=1.0
+Dynamic: license-file
