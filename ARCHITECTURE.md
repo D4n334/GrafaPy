@@ -96,6 +96,20 @@ every series that was active *at any point* in the window. Confirmed by
 querying Prometheus directly - an instant query returned 7 series for one
 panel where the matching 6h range query returned 14.
 
+**NaN/Inf samples are dropped at the query layer.** Prometheus legally
+returns `"NaN"` (e.g. a `0/0` in a percentage calc like `(errors/total)*100`
+when `total` is momentarily 0 within the query window) or `"+Inf"`/`"-Inf"`
+as a sample value. `float("NaN")` parses these without error, so nothing
+catches it until much later - e.g. a NaN reaching a stat panel's trend
+`Sparkline` crashes Textual's renderer with `ValueError: cannot convert
+float NaN to integer`, since its bucket-summary math does `int(nan_ratio)`.
+`GrafanaClient.query_instant`/`query_range` filter to `math.isfinite`
+values right where Prometheus's JSON is parsed - the one chokepoint every
+sample passes through - so a non-finite sample is dropped like a missing
+data point (matching how Grafana itself treats NaN: as a gap, not a
+plotted value) rather than propagating into `Series` and crashing whatever
+widget happens to render it.
+
 **`__auto` legend format.** Grafana's `legendFormat: "__auto"` is a
 sentinel meaning "derive the legend from labels", not literal text to
 display. `panels/legend.py` treats it the same as an empty legend format:

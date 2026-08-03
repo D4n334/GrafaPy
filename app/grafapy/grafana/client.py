@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import Any
 
 import httpx
@@ -121,7 +122,9 @@ class GrafanaClient:
         for series in result:
             metric = series.get("metric", {})
             _, value = series["value"]
-            out.append((metric, float(value)))
+            value = float(value)
+            if math.isfinite(value):
+                out.append((metric, value))
         return out
 
     async def query_range(
@@ -142,6 +145,10 @@ class GrafanaClient:
         out: list[tuple[dict[str, str], list[tuple[float, float]]]] = []
         for series in result:
             metric = series.get("metric", {})
-            points = [(float(ts), float(v)) for ts, v in series["values"]]
+            points = []
+            for ts, v in series["values"]:
+                fv = float(v)
+                if math.isfinite(fv):
+                    points.append((float(ts), fv))
             out.append((metric, points))
         return out
