@@ -8,6 +8,24 @@ _FULL = "█"
 _EMPTY = "░"
 
 
+_MIN_BAR = 6
+_MAX_BAR = 24
+
+
+def bar_rows(series, vmin, vmax, thresholds, unit, decimals, width: int) -> list[Text]:
+    """Rows fitted to `width` cells: the label gets the space it needs, the bar shrinks first."""
+    width = width or 80
+    val_w = max(len(format_value(s.value, unit, decimals)) for s in series) + 1
+    longest = max(len(s.label) for s in series)
+    # ponytail: label wins over bar down to _MIN_BAR; below that labels get ellipsized
+    label_w = max(4, min(longest, width - val_w - _MIN_BAR - 2))
+    bar_w = max(_MIN_BAR, min(_MAX_BAR, width - val_w - label_w - 2))
+    return [
+        bar_row(s.label, s.value, vmin, vmax, thresholds, unit, decimals, label_width=label_w, bar_width=bar_w)
+        for s in series
+    ]
+
+
 def bar_row(
     label: str,
     value: float | None,
@@ -20,6 +38,8 @@ def bar_row(
     label_width: int = 20,
     bar_width: int = 24,
 ) -> Text:
+    if len(label) > label_width:
+        label = label[: label_width - 1] + "…"
     color = threshold_color(value, thresholds)
     amount = value if value is not None else 0.0
     span = max(vmax - vmin, 1e-9)

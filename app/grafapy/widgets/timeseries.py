@@ -28,7 +28,9 @@ class TimeseriesPanel(PlotextPlot):
                     continue
                 xs = [round((ts - now) / 60, 2) for ts, _ in s.points]
                 ys = [v for _, v in s.points]
-                self.plt.plot(xs, ys, label=s.label, marker="braille")
+                cap = max(8, (self.size.width or 80) // 3)  # keep plotext legend inside the plot
+                label = s.label if len(s.label) <= cap else s.label[: cap - 1] + "…"
+                self.plt.plot(xs, ys, label=label, marker="braille")
             self.plt.xlabel("minutes ago")
 
         self.refresh()

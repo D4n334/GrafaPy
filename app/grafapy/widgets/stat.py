@@ -10,7 +10,7 @@ from textual.containers import Vertical
 from textual.widgets import Digits, Sparkline, Static
 
 from ..panels import PanelResult
-from .barutil import bar_row
+from .barutil import bar_rows
 from .formatting import format_value, threshold_color
 
 _NUMERIC_PREFIX_RE = re.compile(r"^([+-]?\d[\d,]*\.?\d*)(.*)$")
@@ -53,6 +53,12 @@ class StatPanel(Vertical):
         yield Sparkline([], id="stat-spark")
         yield Static("", id="stat-bars")
 
+    _result: PanelResult | None = None
+
+    def on_resize(self) -> None:
+        if self._result is not None:
+            self.update_result(self._result)
+
     def _show_hero(self, visible: bool) -> None:
         self.query_one("#stat-digits", Digits).display = visible
         self.query_one("#stat-unit", Static).display = visible
@@ -60,6 +66,7 @@ class StatPanel(Vertical):
         self.query_one("#stat-bars", Static).display = not visible
 
     def update_result(self, result: PanelResult) -> None:
+        self._result = result
         bars = self.query_one("#stat-bars", Static)
 
         if result.error:
@@ -83,10 +90,9 @@ class StatPanel(Vertical):
         self._show_hero(False)
         values = [s.value for s in result.series if s.value is not None]
         vmax = (max(values) if values else 100) or 100
-        rows = [
-            bar_row(s.label, s.value, 0.0, vmax, thresholds, unit, decimals, label_width=18, bar_width=18)
-            for s in result.series
-        ]
+        width = self.size.width or 80
+        cols = max(1, width // 40)
+        rows = bar_rows(result.series, 0.0, vmax, thresholds, unit, decimals, width // cols - 2)
         bars.update(Columns(rows, equal=False, column_first=False, padding=(0, 2)))
 
     def _render_hero(self, series, unit, decimals, thresholds) -> None:
